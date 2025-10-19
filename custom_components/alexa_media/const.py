@@ -15,7 +15,7 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 
-__version__ = "5.5.1"
+__version__ = "5.7.5"
 PROJECT_URL = "https://github.com/alandtse/alexa_media_player/"
 ISSUE_URL = f"{PROJECT_URL}issues"
 NOTIFY_URL = f"{PROJECT_URL}wiki/Configuration%3A-Notification-Component#use-the-notifyalexa_media-service"
@@ -68,6 +68,7 @@ DEFAULT_SCAN_INTERVAL = 60
 
 SERVICE_UPDATE_LAST_CALLED = "update_last_called"
 SERVICE_RESTORE_VOLUME = "restore_volume"
+SERVICE_GET_HISTORY_RECORDS = "get_history_records"
 SERVICE_FORCE_LOGOUT = "force_logout"
 
 RECURRING_PATTERN = {
@@ -229,7 +230,7 @@ MODEL_IDS = {
     "A2RU4B77X9R9NZ": "Echo Link Amp",
     "A2TF17PFR55MTB": "Alexa Mobile Voice Android",
     "A2TTLILJHVNI9X": "LG TV",
-    "A2U21SRK4QGSE1": "Echo Dot Clock (Gen4)",
+    "A2U21SRK4QGSE1": "Echo Dot (Gen4)",
     "A2UONLFQW0PADH": "Echo Show 8 (Gen3)",
     "A2V9UEGZ82H4KZ": "Fire Tablet HD 10",
     "A2VAXZ7UNGY4ZH": "Wyze Headphones",
