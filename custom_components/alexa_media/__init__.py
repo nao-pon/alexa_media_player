@@ -453,7 +453,7 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
             AlexaAPI.get_dnd_state(login_obj),
         ]
         if new_devices:
-            tasks.append(AlexaAPI.get_users_me(login_obj))
+            tasks.append(AlexaAPI.get_authentication(login_obj))
 
         entities_to_monitor = set()
         for sensor in hass.data[DATA_ALEXAMEDIA]["accounts"][email]["entities"][
@@ -532,8 +532,7 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                     entity_state = optional_task_results.pop()
 
                 if new_devices:
-                    users_me = optional_task_results.pop()
-                    auth_info = {"customerId": users_me.get("id")}
+                    auth_info = optional_task_results.pop()
                     _LOGGER.debug(
                         "%s: Found %s devices, %s bluetooth",
                         hide_email(email),
