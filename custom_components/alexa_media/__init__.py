@@ -518,8 +518,9 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                             "should_get_network"
                         ] = False
                         # Disregard entities_to_monitor results since we now have full network details
-                        optional_task_results.pop()
-                        entities_to_monitor = {}
+                        if entities_to_monitor:
+                            optional_task_results.pop()
+                            entities_to_monitor = {}
 
                         alexa_entities = parse_alexa_entities(api_devices)
                         hass.data[DATA_ALEXAMEDIA]["accounts"][email]["devices"].update(
@@ -528,12 +529,13 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
 
                         # First run is a special case. Get the state of all entities(including disabled)
                         # This ensures all entities have state during startup without needing to request coordinator refresh
+                        _entities_to_monitor = {}
                         for type_of_entity, entities in alexa_entities.items():
                             if type_of_entity == "guard" or extended_entity_discovery:
                                 for entity in entities:
-                                    entities_to_monitor.add(entity.get("id"))
+                                    _entities_to_monitor.add(entity.get("id"))
                         entity_state = await get_entity_data(
-                            login_obj, list(entities_to_monitor)
+                            login_obj, list(_entities_to_monitor)
                         )
                 if entities_to_monitor:
                     entity_state = optional_task_results.pop()
@@ -585,9 +587,9 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                                 app["serialNumber"]
                             ]
                         ) = device
-                hass.data[DATA_ALEXAMEDIA]["accounts"][email]["excluded"][
-                    serial
-                ] = device
+                hass.data[DATA_ALEXAMEDIA]["accounts"][email]["excluded"][serial] = (
+                    device
+                )
                 continue
             if exclude and dev_name in exclude:
                 exclude_filter.append(dev_name)
@@ -598,9 +600,9 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                                 app["serialNumber"]
                             ]
                         ) = device
-                hass.data[DATA_ALEXAMEDIA]["accounts"][email]["excluded"][
-                    serial
-                ] = device
+                hass.data[DATA_ALEXAMEDIA]["accounts"][email]["excluded"][serial] = (
+                    device
+                )
                 continue
 
             if (
@@ -664,9 +666,13 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                 .get(serial)
                 .enabled
             ):
-                await hass.data[DATA_ALEXAMEDIA]["accounts"][email]["entities"][
-                    "media_player"
-                ].get(serial).refresh(device, skip_api=True)
+                await (
+                    hass.data[DATA_ALEXAMEDIA]["accounts"][email]["entities"][
+                        "media_player"
+                    ]
+                    .get(serial)
+                    .refresh(device, skip_api=True)
+                )
         _LOGGER.debug(
             "%s: Existing: %s New: %s;"
             " Filtered out by not being in include: %s "
@@ -1165,14 +1171,17 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                             f"{DOMAIN}_{hide_email(email)}"[0:32],
                             {"notification_update": json_payload},
                         )
-                elif command in [
-                    "PUSH_DELETE_DOPPLER_ACTIVITIES",  # delete Alexa history
-                    "PUSH_LIST_CHANGE",  # clear a shopping list https://github.com/alandtse/alexa_media_player/issues/1190
-                    "PUSH_LIST_ITEM_CHANGE",  # update shopping list
-                    "PUSH_CONTENT_FOCUS_CHANGE",  # likely prime related refocus
-                    "PUSH_DEVICE_SETUP_STATE_CHANGE",  # likely device changes mid setup
-                    "PUSH_MEDIA_PREFERENCE_CHANGE",  # disliking or liking songs, https://github.com/alandtse/alexa_media_player/issues/1599
-                ]:
+                elif (
+                    command
+                    in [
+                        "PUSH_DELETE_DOPPLER_ACTIVITIES",  # delete Alexa history
+                        "PUSH_LIST_CHANGE",  # clear a shopping list https://github.com/alandtse/alexa_media_player/issues/1190
+                        "PUSH_LIST_ITEM_CHANGE",  # update shopping list
+                        "PUSH_CONTENT_FOCUS_CHANGE",  # likely prime related refocus
+                        "PUSH_DEVICE_SETUP_STATE_CHANGE",  # likely device changes mid setup
+                        "PUSH_MEDIA_PREFERENCE_CHANGE",  # disliking or liking songs, https://github.com/alandtse/alexa_media_player/issues/1599
+                    ]
+                ):
                     pass
                 else:
                     _LOGGER.debug(
@@ -1224,9 +1233,9 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                     )
                 ):
                     _LOGGER.debug("Discovered new media_player %s", hide_serial(serial))
-                    (hass.data[DATA_ALEXAMEDIA]["accounts"][email]["new_devices"]) = (
-                        True
-                    )
+                    (
+                        hass.data[DATA_ALEXAMEDIA]["accounts"][email]["new_devices"]
+                    ) = True
                     if coordinator:
                         await coordinator.async_request_refresh()
 
@@ -1236,9 +1245,9 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
 
         email: str = login_obj.email
         _LOGGER.debug("%s: HTTP2push successfully connected", hide_email(email))
-        hass.data[DATA_ALEXAMEDIA]["accounts"][email][
-            "http2error"
-        ] = 0  # set errors to 0
+        hass.data[DATA_ALEXAMEDIA]["accounts"][email]["http2error"] = (
+            0  # set errors to 0
+        )
         hass.data[DATA_ALEXAMEDIA]["accounts"][email]["http2_lastattempt"] = time.time()
 
     @callback
@@ -1275,12 +1284,12 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                 errors,
                 delay,
             )
-            hass.data[DATA_ALEXAMEDIA]["accounts"][email][
-                "http2_lastattempt"
-            ] = time.time()
-            http2_enabled = hass.data[DATA_ALEXAMEDIA]["accounts"][email]["http2"] = (
-                await http2_connect()
+            hass.data[DATA_ALEXAMEDIA]["accounts"][email]["http2_lastattempt"] = (
+                time.time()
             )
+            http2_enabled = hass.data[DATA_ALEXAMEDIA]["accounts"][email][
+                "http2"
+            ] = await http2_connect()
             errors = hass.data[DATA_ALEXAMEDIA]["accounts"][email]["http2error"] = (
                 hass.data[DATA_ALEXAMEDIA]["accounts"][email]["http2error"] + 1
             )
@@ -1348,9 +1357,9 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
         else config.get(CONF_SCAN_INTERVAL)
     )
     hass.data[DATA_ALEXAMEDIA]["accounts"][email]["login_obj"] = login_obj
-    http2_enabled = hass.data[DATA_ALEXAMEDIA]["accounts"][email]["http2"] = (
-        await http2_connect()
-    )
+    http2_enabled = hass.data[DATA_ALEXAMEDIA]["accounts"][email][
+        "http2"
+    ] = await http2_connect()
     coordinator = hass.data[DATA_ALEXAMEDIA]["accounts"][email].get("coordinator")
     if coordinator is None:
         _LOGGER.debug("%s: Creating coordinator", hide_email(email))
@@ -1539,9 +1548,7 @@ async def test_login_status(hass, config_entry, login) -> bool:
     account = config_entry.data
     _LOGGER.debug("Logging in: %s %s", obfuscate(account), in_progress_instances(hass))
     _LOGGER.debug("Login stats: %s", login.stats)
-    message: str = (
-        f"Reauthenticate {login.email} on the [Integrations](/config/integrations) page. "
-    )
+    message: str = f"Reauthenticate {login.email} on the [Integrations](/config/integrations) page. "
     if login.stats.get("login_timestamp") != datetime(1, 1, 1):
         elaspsed_time: str = str(datetime.now() - login.stats.get("login_timestamp"))
         api_calls: int = login.stats.get("api_calls")
