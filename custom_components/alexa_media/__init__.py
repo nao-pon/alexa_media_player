@@ -493,7 +493,7 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(30):
+            async with async_timeout.timeout(60):
                 (
                     devices,
                     bluetooth,
@@ -503,33 +503,40 @@ async def setup_alexa(hass, config_entry, login_obj: AlexaLogin):
                 ) = await asyncio.gather(*tasks)
 
                 if should_get_network:
-                    _LOGGER.debug(
-                        "Alexa entities have been loaded. Prepared for discovery."
-                    )
+                    _LOGGER.debug("Checking network discovery results.")
                     api_devices = optional_task_results.pop()
                     if not api_devices:
                         _LOGGER.warning(
-                            "%s: Alexa API returned an unexpected response while getting connected devices.",
+                            "%s: Alexa API returned an unexpected response while discovering Alexa network. Will retry on next poll.",
                             hide_email(email),
                         )
-                    alexa_entities = parse_alexa_entities(api_devices)
-                    hass.data[DATA_ALEXAMEDIA]["accounts"][email]["devices"].update(
-                        alexa_entities
-                    )
-                    hass.data[DATA_ALEXAMEDIA]["accounts"][email][
-                        "should_get_network"
-                    ] = False
+                    else:
+                        _LOGGER.debug(
+                            "Network discovery succeeded. Processing results."
+                        )
+                        # Only process this once after success
+                        hass.data[DATA_ALEXAMEDIA]["accounts"][email][
+                            "should_get_network"
+                        ] = False
+                        # Disregard entities_to_monitor results since we now have full network details
+                        optional_task_results.pop()
+                        entities_to_monitor = {}
 
-                    # First run is a special case. Get the state of all entities(including disabled)
-                    # This ensures all entities have state during startup without needing to request coordinator refresh
-                    for type_of_entity, entities in alexa_entities.items():
-                        if type_of_entity == "guard" or extended_entity_discovery:
-                            for entity in entities:
-                                entities_to_monitor.add(entity.get("id"))
-                    entity_state = await get_entity_data(
-                        login_obj, list(entities_to_monitor)
-                    )
-                elif entities_to_monitor:
+                        alexa_entities = parse_alexa_entities(api_devices)
+                        hass.data[DATA_ALEXAMEDIA]["accounts"][email]["devices"].update(
+                            alexa_entities
+                        )
+
+                        # First run is a special case. Get the state of all entities(including disabled)
+                        # This ensures all entities have state during startup without needing to request coordinator refresh
+                        for type_of_entity, entities in alexa_entities.items():
+                            if type_of_entity == "guard" or extended_entity_discovery:
+                                for entity in entities:
+                                    entities_to_monitor.add(entity.get("id"))
+                        entity_state = await get_entity_data(
+                            login_obj, list(entities_to_monitor)
+                        )
+                if entities_to_monitor:
                     entity_state = optional_task_results.pop()
 
                 if new_devices:
