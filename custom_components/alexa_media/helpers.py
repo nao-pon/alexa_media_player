@@ -8,6 +8,7 @@ https://community.home-assistant.io/t/echo-devices-alexa-as-media-player-testers
 """
 
 import asyncio
+from collections.abc import Mapping, Sequence
 import functools
 import hashlib
 import logging
