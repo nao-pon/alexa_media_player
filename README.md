@@ -1,3 +1,13 @@
+# ❓ What's this?
+
+This repository is the Edge version of the Alexa Media Player integration. It is maintained for the purpose of allowing you to try out Alexa Media Player integration pull requests and alexay merge requests early on and merge them.
+
+If you'd like to try it out, you can install it from the following banner link: [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=nao-pon&repository=alexa_media_player&category=integration)
+
+⬇️⬇️ Below is the Alexa Media Player integration README. ⬇️⬇️
+
+----------------
+
 [![Validate](https://github.com/alandtse/alexa_media_player/actions/workflows/validate.yaml/badge.svg)](https://github.com/alandtse/alexa_media_player/actions/workflows/validate.yaml)
 ![semantic_release](https://github.com/alandtse/alexa_media_player/workflows/semantic_release/badge.svg)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
