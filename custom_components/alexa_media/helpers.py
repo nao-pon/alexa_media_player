@@ -37,8 +37,14 @@ async def add_devices(
     exclude_filter: Optional[list[str]] = None,
 ) -> bool:
     """Add devices using add_devices_callback."""
-    include_filter = include_filter or []
-    exclude_filter = exclude_filter or []
+    if isinstance(include_filter, str):
+        include_filter = [x.strip() for x in include_filter.split(",") if x.strip()]
+    else:
+        include_filter = include_filter or []
+    if isinstance(exclude_filter, str):
+        exclude_filter = [x.strip() for x in exclude_filter.split(",") if x.strip()]
+    else:
+        exclude_filter = exclude_filter or []
 
     def _device_name(dev: Entity) -> str | None:
         """Best-effort name before entity_id is assigned."""
